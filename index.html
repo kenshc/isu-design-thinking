@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="115學年第1學期 設計思考與AI應用 期末設計挑戰：零錢分類器。含時程、硬幣尺寸規格與評分方式。">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%AA%99%3C/text%3E%3C/svg%3E">
+<title>零錢分類器設計挑戰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+
+<style>
+  :root {
+    --ground:      #EDF1F4;
+    --surface:     #FFFFFF;
+    --surface-alt: #F5F8FA;
+    --ink:         #16202B;
+    --ink-soft:    #3D4C5A;
+    --muted:       #647585;
+    --line:        #D3DBE2;
+    --line-soft:   #E4EAEF;
+
+    --brass:       #A9762F;
+    --brass-soft:  #F0E2CC;
+    --brass-ink:   #7C5518;
+
+    --done:        #16705A;
+    --done-soft:   #D8EBE4;
+    --alert:       #AC4034;
+    --alert-soft:  #F6DFDC;
+
+    --shadow: 0 1px 2px rgba(22, 32, 43, .06), 0 8px 24px -12px rgba(22, 32, 43, .18);
+
+    --sans: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Noto Serif TC", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #10171E;
+      --surface:     #1A242D;
+      --surface-alt: #212D37;
+      --ink:         #E8EDF1;
+      --ink-soft:    #C2CDD6;
+      --muted:       #8B9BA8;
+      --line:        #2E3C48;
+      --line-soft:   #26323C;
+
+      --brass:       #D9A44E;
+      --brass-soft:  #3A2E1B;
+      --brass-ink:   #E8BE77;
+
+      --done:        #4FBE9B;
+      --done-soft:   #16302A;
+      --alert:       #E07365;
+      --alert-soft:  #35201D;
+
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #10171E;
+    --surface:     #1A242D;
+    --surface-alt: #212D37;
+    --ink:         #E8EDF1;
+    --ink-soft:    #C2CDD6;
+    --muted:       #8B9BA8;
+    --line:        #2E3C48;
+    --line-soft:   #26323C;
+
+    --brass:       #D9A44E;
+    --brass-soft:  #3A2E1B;
+    --brass-ink:   #E8BE77;
+
+    --done:        #4FBE9B;
+    --done-soft:   #16302A;
+    --alert:       #E07365;
+    --alert-soft:  #35201D;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* ---------- header ---------- */
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 32px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .74rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  .eyebrow b { color: var(--brass-ink); font-weight: 600; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.1rem, 6vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: clamp(1rem, 2.4vw, 1.12rem);
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  /* ---------- key figures ---------- */
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .fig {
+    background: var(--surface);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .fig-num {
+    font-family: var(--mono);
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fig-num small { font-size: .95rem; font-weight: 400; color: var(--muted); }
+
+  .fig-label {
+    font-size: .8rem;
+    color: var(--muted);
+    letter-spacing: .02em;
+  }
+
+  .fig.is-key { background: var(--surface-alt); }
+  .fig.is-key .fig-num { color: var(--brass-ink); }
+
+  /* ---------- generic section ---------- */
+  section { display: flex; flex-direction: column; gap: 18px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 1.45rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: .01em;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  h2::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  p { margin: 0; }
+
+  .lede { color: var(--ink-soft); max-width: 64ch; }
+
+  /* ---------- panels ---------- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  ul.tight { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 7px; }
+  ul.tight li { color: var(--ink-soft); }
+  ul.tight li::marker { color: var(--brass); }
+
+  .callout {
+    border-left: 3px solid var(--brass);
+    background: var(--surface-alt);
+    padding: 14px 18px;
+    border-radius: 0 4px 4px 0;
+    color: var(--ink-soft);
+  }
+
+  .callout strong { color: var(--ink); }
+
+  /* ---------- timeline ---------- */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .phase {
+    display: grid;
+    grid-template-columns: 56px 132px 1fr;
+    gap: 0 18px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: start;
+  }
+
+  .phase:last-child { border-bottom: none; }
+
+  .phase-n {
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase-when {
+    font-family: var(--mono);
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.5;
+    padding-top: 3px;
+  }
+
+  .phase-body { display: flex; flex-direction: column; gap: 6px; }
+
+  .phase-title {
+    font-weight: 700;
+    font-size: 1.02rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .phase-desc { color: var(--ink-soft); font-size: .94rem; }
+
+  .phase.is-peak { background: var(--surface-alt); }
+  .phase.is-peak .phase-n,
+  .phase.is-peak .phase-when { color: var(--brass-ink); }
+
+  /* ---------- chips ---------- */
+  .chip {
+    font-family: var(--mono);
+    font-size: .68rem;
+    font-weight: 500;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+
+  .chip-class  { background: var(--surface-alt); color: var(--muted); border-color: var(--line); }
+  .chip-peak   { background: var(--brass-soft); color: var(--brass-ink); border-color: var(--brass); }
+  .chip-self   { background: var(--done-soft); color: var(--done); border-color: var(--done); }
+  .chip-due    { background: var(--alert-soft); color: var(--alert); border-color: var(--alert); }
+  .chip-tbd    { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+
+  /* ---------- coin spec ---------- */
+  .coins {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 26px;
+    align-items: flex-end;
+    padding: 8px 0 4px;
+  }
+
+  .coin { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+  .coin-disc {
+    border-radius: 50%;
+    border: 2px solid var(--brass);
+    background: var(--brass-soft);
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--brass-ink);
+  }
+
+  .c1  { width: 60px;  height: 60px;  font-size: .78rem; }
+  .c5  { width: 66px;  height: 66px;  font-size: .82rem; }
+  .c10 { width: 78px;  height: 78px;  font-size: .9rem; }
+  .c50 { width: 84px;  height: 84px;  font-size: .95rem; }
+
+  .coin-spec {
+    font-family: var(--mono);
+    font-size: .76rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .coin-spec b { color: var(--ink); font-weight: 600; display: block; }
+
+  /* ---------- grading ---------- */
+  .score-parts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--brass);
+    border-radius: 3px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .score-card h3 { font-size: 1.02rem; }
+  .score-card p { font-size: .9rem; color: var(--ink-soft); }
+
+  .tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .tier {
+    display: grid;
+    grid-template-columns: 60px 116px 1fr;
+    gap: 16px;
+    align-items: center;
+    background: var(--surface);
+    padding: 12px 18px;
+  }
+
+  .tier-name { font-weight: 700; font-size: .95rem; }
+
+  .tier-rate {
+    font-family: var(--mono);
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--brass-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tier-evidence { font-size: .88rem; color: var(--ink-soft); }
+
+  .tier.is-low .tier-rate { color: var(--muted); }
+
+  /* ---------- keep-list ---------- */
+  .keep {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+  }
+
+  .keep-item {
+    background: var(--surface-alt);
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    padding: 14px 16px;
+    font-size: .92rem;
+    color: var(--ink-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .keep-item b { color: var(--ink); font-size: .95rem; }
+
+  /* ---------- limits ---------- */
+  .limit {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .limit:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .limit-mark {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: var(--alert);
+    border: 1px solid var(--alert);
+    border-radius: 2px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    margin-top: 3px;
+  }
+
+  .limit-text { color: var(--ink-soft); }
+  .limit-text b { color: var(--ink); }
+
+  /* ---------- footer ---------- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+    font-size: .85rem;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  footer code {
+    font-family: var(--mono);
+    font-size: .82rem;
+    background: var(--surface-alt);
+    border: 1px solid var(--line-soft);
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 620px) {
+    .phase { grid-template-columns: 40px 1fr; gap: 4px 14px; }
+    .phase-when { grid-column: 2; padding-top: 0; }
+    .phase-body { grid-column: 2; }
+    .tier { grid-template-columns: 52px 96px; gap: 4px 12px; }
+    .tier-evidence { grid-column: 2 / -1; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .panel, .score-card { transition: border-color .2s ease; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>115-1 土木一</span>
+      <span>A0684000</span>
+      <span>設計思考與AI應用</span>
+      <span><b>期末設計挑戰</b></span>
+    </div>
+    <h1>零錢分類器</h1>
+    <p class="standfirst">
+      設計並用 3D 列印做出一個能自動把硬幣依面額分類的裝置。從問題理解、AI 輔助發想、
+      Text-to-CAD 建模，一路做到實體列印、測試與修正——這學期你會走完一次完整的設計迭代。
+    </p>
+  </header>
+
+  <div class="figures">
+    <div class="fig is-key">
+      <span class="fig-num">10/31<small>–11/1</small></span>
+      <span class="fig-label">週末密集工作坊（六・日）</span>
+    </div>
+    <div class="fig">
+      <span class="fig-num">14<small> 小時</small></span>
+      <span class="fig-label">Text-to-CAD ＋ 3D列印</span>
+    </div>
+    <div class="fig">
+      <span class="fig-num">7<small> 組</small></span>
+      <span class="fig-label">全班 50 人分組</span>
+    </div>
+    <div class="fig">
+      <span class="fig-num">4–5<small> 台</small></span>
+      <span class="fig-label">實驗室 3D 印表機</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>題目範圍</h2>
+    <div class="panel-grid">
+      <div class="panel">
+        <h3>全班統一題目，細節各組自訂</h3>
+        <ul class="tight">
+          <li>依什麼原則分類——直徑、厚度、重量</li>
+          <li>進料方式——手動投入、滑軌、旋轉盤</li>
+          <li>外觀造型與使用情境——募款箱、存錢筒、收銀台</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>一條硬規則</h3>
+        <p class="lede">
+          分類必須靠<strong>機構本身的物理設計</strong>做到——例如卡槽的尺寸差異。
+          不能用感測器或程式判斷。
+        </p>
+        <p class="lede">
+          這門課的重點是 Text-to-CAD 與實體原型製作，不是電子控制。
+        </p>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>為什麼是零錢分類器？</strong>
+      投幣、找零、募款箱清點都會遇到「一堆混在一起的硬幣要快速分開」。
+      題目規模小，卻涵蓋完整的機構設計問題——幾何配合、公差、重力導引、卡料排除——
+      適合在一學期內用桌上型 3D 印表機做出一個真的能動的原型。
+    </div>
+  </section>
+
+  <section>
+    <h2>設計參考｜新台幣硬幣尺寸</h2>
+    <p class="lede">
+      這是你們要設計的對象。圓圈依實際直徑等比例繪製——分類機構的關鍵，就在這幾毫米的差距裡。
+    </p>
+    <div class="panel">
+      <div class="coins">
+        <div class="coin">
+          <div class="coin-disc c1">$1</div>
+          <div class="coin-spec"><b>20.0 mm</b>厚 1.6 mm</div>
+        </div>
+        <div class="coin">
+          <div class="coin-disc c5">$5</div>
+          <div class="coin-spec"><b>22.0 mm</b>厚 1.7 mm</div>
+        </div>
+        <div class="coin">
+          <div class="coin-disc c10">$10</div>
+          <div class="coin-spec"><b>26.0 mm</b>厚 2.0 mm</div>
+        </div>
+        <div class="coin">
+          <div class="coin-disc c50">$50</div>
+          <div class="coin-spec"><b>28.0 mm</b>厚 2.4 mm</div>
+        </div>
+      </div>
+      <div class="callout">
+        以上為參考值。<strong>設計前請自己拿實際硬幣量一次</strong>——量測、驗證、不照單全收，
+        這件事本身就是這門課要練的能力。3D 列印還有收縮與公差，卡槽尺寸不能直接照抄。
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>時程</h2>
+    <div class="timeline">
+
+      <div class="phase">
+        <div class="phase-n">01</div>
+        <div class="phase-when">W2–W6</div>
+        <div class="phase-body">
+          <div class="phase-title">設計思考暖身 <span class="chip chip-class">課堂</span></div>
+          <div class="phase-desc">
+            棉花糖塔、購物車設計、團隊合約、工程師形象、保護小艾格——
+            練習同理心、定義問題、快速原型的基本功。
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-n">02</div>
+        <div class="phase-when">W7–W8</div>
+        <div class="phase-body">
+          <div class="phase-title">問題定義與 AI 輔助發想 <span class="chip chip-class">課堂</span></div>
+          <div class="phase-desc">
+            用 AI 協助整理使用情境、發想多種分類機構方案，收斂出你們這組的設計方向。
+            <strong>方向有疑問要在這兩週跟老師確認</strong>，不要等到工作坊當天才發現走錯路。
+          </div>
+        </div>
+      </div>
+
+      <div class="phase is-peak">
+        <div class="phase-n">03</div>
+        <div class="phase-when">10/31（六）<br>11/01（日）</div>
+        <div class="phase-body">
+          <div class="phase-title">
+            Text-to-CAD ＋ 3D列印工作坊
+            <span class="chip chip-peak">密集 14 小時</span>
+          </div>
+          <div class="phase-desc">
+            用自然語言描述你們的設計，透過 AI 產生與修正 CAD 模型，
+            現場完成第一版可列印的數位模型（Prototype V1）。
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-n">04</div>
+        <div class="phase-when">工作坊後<br>～W16 前</div>
+        <div class="phase-body">
+          <div class="phase-title">實體列印與測試迭代 <span class="chip chip-self">自主・需預約</span></div>
+          <div class="phase-desc">
+            各組自行預約助教到實驗室列印，拿到成品後實際測試——
+            哪裡卡料、哪裡分類不準，回頭修改模型做出 V2。
+            <strong>提早排你們這組的時段</strong>：4–5 台機器要服務 7 組。
+          </div>
+        </div>
+      </div>
+
+      <div class="phase is-peak">
+        <div class="phase-n">05</div>
+        <div class="phase-when">W16</div>
+        <div class="phase-body">
+          <div class="phase-title">實體簡報 <span class="chip chip-due">帶實體原型到教室</span></div>
+          <div class="phase-desc">
+            現場展示你們做出來的分類器，用統一測試硬幣實測分類正確率，並說明設計過程。
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-n">06</div>
+        <div class="phase-when">W17</div>
+        <div class="phase-body">
+          <div class="phase-title">修正建議回覆 <span class="chip chip-class">課堂</span></div>
+          <div class="phase-desc">
+            依老師與同學的簡報回饋，說明你們會怎麼修正——不一定要真的再列印一次。
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-n">07</div>
+        <div class="phase-when">W18</div>
+        <div class="phase-body">
+          <div class="phase-title">反思 <span class="chip chip-self">線上非同步</span></div>
+          <div class="phase-desc">
+            回顧整個過程：AI 幫了你們什麼、AI 哪裡出錯、你們怎麼判斷與修正。
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>怎麼被評分</h2>
+    <div class="score-parts">
+      <div class="score-card">
+        <h3>分類正確率</h3>
+        <p>W16 當天用<strong>同一批測試硬幣</strong>現場實測：正確分類數 ÷ 投入總數。</p>
+        <span class="chip chip-tbd">幣別與數量・教師公告</span>
+      </div>
+      <div class="score-card">
+        <h3>組別互評</h3>
+        <p>其他組觀摩你們的原型後互評，計入該組成績。</p>
+        <span class="chip chip-tbd">評分表・教師公告</span>
+      </div>
+      <div class="score-card">
+        <h3>設計過程證據</h3>
+        <p>問題定義 → AI 輔助發想 → CAD 修正 → 測試迭代，有沒有完整記錄。</p>
+        <span class="chip chip-tbd">三項占比・教師公告</span>
+      </div>
+    </div>
+
+    <div class="tiers">
+      <div class="tier">
+        <span class="tier-name">優</span>
+        <span class="tier-rate">≥ 90%</span>
+        <span class="tier-evidence">過程記錄完整，V1／V2 差異說明清楚</span>
+      </div>
+      <div class="tier">
+        <span class="tier-name">良</span>
+        <span class="tier-rate">75 – 89%</span>
+        <span class="tier-evidence">迭代紀錄清楚，但部分決策說明不足</span>
+      </div>
+      <div class="tier">
+        <span class="tier-name">可</span>
+        <span class="tier-rate">50 – 74%</span>
+        <span class="tier-evidence">有基本測試記錄，迭代邏輯較弱</span>
+      </div>
+      <div class="tier is-low">
+        <span class="tier-name">尚可</span>
+        <span class="tier-rate">1 – 49%</span>
+        <span class="tier-evidence">原型可運作但正確率低，過程記錄零散</span>
+      </div>
+      <div class="tier is-low">
+        <span class="tier-name">待加強</span>
+        <span class="tier-rate">0% ／ 未完成</span>
+        <span class="tier-evidence">未完成可運作原型，缺乏過程記錄</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>不是比造型好看。</strong>
+      分類邏輯合不合理、有沒有測試證據、有沒有修正紀錄，比「看起來很酷」重要得多。
+    </div>
+  </section>
+
+  <section>
+    <h2>全程要保留的東西</h2>
+    <p class="lede">
+      這門課的重點之一是「AI 使用歷程本身也是學習成果」。不要只交出最後成品長怎樣——
+      過程紀錄跟成品一樣重要。
+    </p>
+    <div class="keep">
+      <div class="keep-item">
+        <b>重要 prompt</b>
+        你們怎麼描述需求、怎麼一步步修正
+      </div>
+      <div class="keep-item">
+        <b>AI 回覆與模型版本</b>
+        產生出來的 CAD 模型，每一版都留著
+      </div>
+      <div class="keep-item">
+        <b>修改紀錄</b>
+        為什麼改、改了什麼
+      </div>
+      <div class="keep-item">
+        <b>V1／V2 對照</b>
+        兩版原型的差異與測試結果
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>限制與提醒</h2>
+    <div class="panel">
+      <div class="limit">
+        <span class="limit-mark">驗證</span>
+        <span class="limit-text">
+          <b>AI 輸出不能照單全收。</b>
+          AI 生成的 CAD 模型如果尺寸不合理、結構太薄、有懸空角度，你們自己要檢查出來並修正，
+          不能直接拿去列印。
+        </span>
+      </div>
+      <div class="limit">
+        <span class="limit-mark">產能</span>
+        <span class="limit-text">
+          <b>列印排程要提早。</b>
+          7 組共用 4–5 台印表機，大家都卡在最後一週會排不到。
+          工作坊結束後就去約助教。
+        </span>
+      </div>
+      <div class="limit">
+        <span class="limit-mark">個資</span>
+        <span class="limit-text">
+          <b>簡報與反思不要出現其他同學的姓名、成績等個人資料。</b>
+        </span>
+      </div>
+      <div class="limit">
+        <span class="limit-mark">版權</span>
+        <span class="limit-text">
+          <b>引用教科書或他人素材要註明來源</b>，不要直接拿版權內容當自己的設計說明。
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>115學年第1學期・土木一・設計思考與AI應用（A0684000）・授課教師：周仕勳</p>
+    <p>本任務書為草稿，標示 <code>教師公告</code> 的項目尚未定案，最終版本以課堂公告為準。</p>
+  </footer>
+
+</div>
+</body>
+</html>
